@@ -5,7 +5,7 @@ int main()
 {
 	for (int i = 0;i < 10000; i ++) {
 		printf("%d\r",i);
-		fflush(stdout);
+//		fflush(stdout);
 		usleep(1000);
 	}
 }
