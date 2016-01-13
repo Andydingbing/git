@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CSE", "CSE\CSE.vcproj", "{9658ECB9-ECF4-47FC-B4B0-16FEB32EF85D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libInstrument", "libInstrument\libInstrument.vcproj", "{8F2F2830-E38A-4CDD-A8C3-AEC00D499438}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9658ECB9-ECF4-47FC-B4B0-16FEB32EF85D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9658ECB9-ECF4-47FC-B4B0-16FEB32EF85D}.Debug|Win32.Build.0 = Debug|Win32
+		{9658ECB9-ECF4-47FC-B4B0-16FEB32EF85D}.Debug|x64.ActiveCfg = Debug|x64
+		{9658ECB9-ECF4-47FC-B4B0-16FEB32EF85D}.Debug|x64.Build.0 = Debug|x64
+		{9658ECB9-ECF4-47FC-B4B0-16FEB32EF85D}.Release|Win32.ActiveCfg = Release|Win32
+		{9658ECB9-ECF4-47FC-B4B0-16FEB32EF85D}.Release|Win32.Build.0 = Release|Win32
+		{9658ECB9-ECF4-47FC-B4B0-16FEB32EF85D}.Release|x64.ActiveCfg = Release|Win32
+		{8F2F2830-E38A-4CDD-A8C3-AEC00D499438}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8F2F2830-E38A-4CDD-A8C3-AEC00D499438}.Debug|Win32.Build.0 = Debug|Win32
+		{8F2F2830-E38A-4CDD-A8C3-AEC00D499438}.Debug|x64.ActiveCfg = Debug|x64
+		{8F2F2830-E38A-4CDD-A8C3-AEC00D499438}.Debug|x64.Build.0 = Debug|x64
+		{8F2F2830-E38A-4CDD-A8C3-AEC00D499438}.Release|Win32.ActiveCfg = Release|Win32
+		{8F2F2830-E38A-4CDD-A8C3-AEC00D499438}.Release|Win32.Build.0 = Release|Win32
+		{8F2F2830-E38A-4CDD-A8C3-AEC00D499438}.Release|x64.ActiveCfg = Release|x64
+		{8F2F2830-E38A-4CDD-A8C3-AEC00D499438}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
