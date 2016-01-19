@@ -1,10 +1,9 @@
 #ifndef _RF_H_
 #define _RF_H_
 
+#include "stdint.h"
 #include "visa_driver.h"
-#include "ad9361_inttypes.h"
 
-//#define RF rf::Instance() 
 const uint32_t tx_dma_mem_size  = 1024 * 1024;		//每次传1M Sample = 4Mb
 
 const uint32_t R_BlockSamples	= 128 * 1024 * 8;	//每块128k*8 samples(4Mb)
@@ -14,6 +13,7 @@ enum TRX {
 	Tx = 0,											//发射/接收板卡
 	Rx = 1,
 };
+
 enum GPIO {
 	GPA = 0,										//Tx IO扩展器 GPIOA&B;
 	GPB = 1,
@@ -28,6 +28,10 @@ public:
 public:
 	int32_t Get_FPGA_Version(uint32_t &ver);
 	const char *Get_Driver_Version();
+private:
+	static float arb_level_offset;
+	float att_table[101 * 117];										//Tx衰减值表
+	float off_table[101 * 117];										//Tx校准表
 public:
 	int32_t Fpga_Reset();						//FPGA复位
 	int32_t	Get_Tx_Rx_Board(TRX &trx);			//发射/接收板卡
@@ -68,8 +72,30 @@ public:
 	int32_t Set_Tx_Baseband_Att(double att);						//设置基带att
 	int32_t Get_Tx_Baseband_Att(double &att);
 	bool	Get_Tx_Memory_Status();									//获取发射内存状态
+	int32_t Set_Tx(uint64_t freq, double power_dBm, bool iscw);
+	int32_t Get_Tx(uint64_t freq, double power_dBm, double &cal_value, double &cal_offset);
+	int32_t Get_Tx(uint64_t freq, double power_dBm, uint32_t &rf_att, double &ad9361_att, double &bb_att, double &cal_offset);
 public:
 	/****************************Rx*************************/
+private:
+	float rx_cal_table[101 * 43];
+	static int ad9361_gain[20];
+	static int Total_gain[20];
+	enum IQCaptureSrcs {											//接收捕获源,Trigger为中频功率,全部捕获为FreeRun	
+		IQCapsrcFreeRun = 0x00,
+		IQCapsrcRstMkr  = 0x09,
+		IQCapsrcMkr1	= 0x0a,
+		IQCapsrcMkr2	= 0x0b,
+		IQCapsrcMkr3	= 0x0c,
+		IQCapsrcMkr4	= 0x0d,
+		IQCapsrcUsrMkr	= 0x0e,
+		IQCapsrcETrig	= 0x11,
+		IQCapsrcETrig1	= 0x12,
+		IQCapsrcETrig2	= 0x13,
+		IQCapsrcETrig3	= 0x14,
+		IQCapsrcETrig4	= 0x15,
+		IQCapsrcIFPwr	= 0x21
+	};
 	int32_t Rx_CAP_Memory_Alloc();									//申请Rx DMA内存
 	int32_t Rx_CAP_Memory_Release();								//释放Rx DMA内存
 	int32_t Rx_Capture(int16_t *			I,							//I路值
@@ -98,9 +124,12 @@ public:
 	int32_t Setup_DDC();											//DDC
 	int32_t Set_Rx_Rf_Lo(uint32_t LoFreq);							//射频链路接收本振
 	bool	Get_Rx_Memory_Status();									//获取接收内存状态
+	int32_t Set_Rx(uint64_t Freq,int ref_level,double &power);
+	int32_t Get_Rx(uint64_t Freq,int ref_level,double &total_gain,double &cal_value);
 public:
 	int32_t Tx_Flash_Write(float *data,int length);
 	int32_t Tx_Flash_Read(float *data,int length);
+	int32_t GetCalibrate(bool &cal);
 private:
 	int  slot;
 private:
@@ -129,27 +158,12 @@ private:
 		MultiSegRepMode_Continous_Seamless
 	};
 private:
-	enum IQCaptureSrcs {											//接收捕获源,Trigger为中频功率,全部捕获为FreeRun	
-		IQCapsrcFreeRun = 0x00,
-		IQCapsrcRstMkr  = 0x09,
-		IQCapsrcMkr1	= 0x0a,
-		IQCapsrcMkr2	= 0x0b,
-		IQCapsrcMkr3	= 0x0c,
-		IQCapsrcMkr4	= 0x0d,
-		IQCapsrcUsrMkr	= 0x0e,
-		IQCapsrcETrig	= 0x11,
-		IQCapsrcETrig1	= 0x12,
-		IQCapsrcETrig2	= 0x13,
-		IQCapsrcETrig3	= 0x14,
-		IQCapsrcETrig4	= 0x15,
-		IQCapsrcIFPwr	= 0x21
-	};
-private:
 	unsigned long aSamples[R_BlockSamples];							//IQ数据临时存放
 public:
 	static char *get_last_error();
 private:
 	static void set_last_error(const char *format, ...);
+	static int32_t set_last_error(int32_t func,const char *format, ...);
 private:
 	static char m_last_error[512];
 };

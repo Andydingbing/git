@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CSEMaindlg.h"
 
 class CCSEView : public CView
 {
@@ -17,7 +18,8 @@ public:
 
 // 操作
 public:
-
+	CCSEMaindlg CSE_Model1_Maindlg;
+	CCSEMaindlg CSE_Model2_Maindlg;
 // 重写
 public:
 	virtual void OnDraw(CDC* pDC);  // 重写以绘制该视图
@@ -37,6 +39,9 @@ protected:
 // 生成的消息映射函数
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	virtual void OnInitialUpdate();
 };
 
 #ifndef _DEBUG  // CSEView.cpp 中的调试版本

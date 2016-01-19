@@ -18,12 +18,6 @@ ArbReader::~ArbReader()
 	Release();
 }
 
-ArbReader &ArbReader::Instance()
-{
-	static ArbReader arbreader;
-	return arbreader;
-}
-
 int ArbReader::Load(FILE *fp) {
 	if (fp == NULL)
 		return 1;

@@ -1,10 +1,9 @@
 #ifndef ARB_READER_H
 #define ARB_READER_H
 
+#include "stdint.h"
 #include <list>
 #include <vector>
-
-#define ARB ArbReader::Instance()
 
 using namespace std;
 
@@ -13,7 +12,6 @@ class ArbReader
 public:
 	ArbReader();
 	~ArbReader();
-	static ArbReader &Instance();
 
 	int Load(FILE *fp);
 	int Load(const char *filePath);

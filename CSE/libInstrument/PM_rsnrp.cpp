@@ -81,7 +81,6 @@ bool PM_rsnrp::Reset() {
 		Sleep (50);
 		NRP_CHECK(rsnrpz_chan_isMeasurementComplete(m_hVisa, 1, &isMeasComplete));
 	} while ((isMeasComplete == VI_FALSE));
-	AfxMessageBox("reset complete");
 	Sleep(100);
 	return true;
 }

@@ -142,7 +142,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../include;../lib;../visa_driver"
+				AdditionalIncludeDirectories="../include;../visa_driver"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_AFXEXT"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 			/>
@@ -157,7 +158,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="visa64.lib NrpControl2_64.lib rsnrpz_64.lib rsnrp_64.lib"
+				AdditionalDependencies="visa64.lib rsnrpz_64.lib rsnrp_64.lib"
 				AdditionalLibraryDirectories="../lib"
 			/>
 			<Tool
@@ -301,7 +302,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../include;../lib;../visa_driver"
+				AdditionalIncludeDirectories="../include;../visa_driver"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_AFXEXT"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 			/>
@@ -316,7 +318,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="visa64.lib NrpControl2_64.lib rsnrpz_64.lib rsnrp_64.lib"
+				AdditionalDependencies="visa64.lib rsnrpz_64.lib rsnrp_64.lib"
 				AdditionalLibraryDirectories="../lib"
 			/>
 			<Tool
@@ -643,6 +645,14 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						PreprocessorDefinitions=""
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>

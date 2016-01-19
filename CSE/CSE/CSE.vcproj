@@ -103,6 +103,8 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
+			UseOfMFC="2"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -122,7 +124,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="../include;../Log;../visa_driver"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -135,6 +139,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="visa64.lib"
+				AdditionalLibraryDirectories="../lib"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				EntryPointSymbol="WinMainCRTStartup"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -246,6 +255,8 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
+			UseOfMFC="2"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -265,7 +276,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="../include;../Log;../visa_driver"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -278,6 +291,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="visa64.lib"
+				AdditionalLibraryDirectories="../lib"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				EntryPointSymbol="WinMainCRTStartup"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -316,6 +334,10 @@
 			</File>
 			<File
 				RelativePath=".\CSEDoc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CSEMaindlg.cpp"
 				>
 			</File>
 			<File
@@ -374,6 +396,10 @@
 			</File>
 			<File
 				RelativePath=".\CSEDoc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CSEMaindlg.h"
 				>
 			</File>
 			<File
@@ -467,14 +493,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\RF\MultiSG_api.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\RF\MultiSG_api.h"
-				>
-			</File>
-			<File
 				RelativePath="..\RF\rf.cpp"
 				>
 			</File>
@@ -492,6 +510,10 @@
 			</File>
 			<File
 				RelativePath="..\libCSE\libCSE.h"
+				>
+			</File>
+			<File
+				RelativePath="..\libCSE\version_.cpp"
 				>
 			</File>
 		</Filter>
@@ -513,5 +535,9 @@
 		</File>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="CSE.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

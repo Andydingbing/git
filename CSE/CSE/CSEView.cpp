@@ -17,6 +17,7 @@
 IMPLEMENT_DYNCREATE(CCSEView, CView)
 
 BEGIN_MESSAGE_MAP(CCSEView, CView)
+	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 // CCSEView 构造/析构
@@ -35,7 +36,6 @@ BOOL CCSEView::PreCreateWindow(CREATESTRUCT& cs)
 {
 	// TODO: 在此处通过修改
 	//  CREATESTRUCT cs 来修改窗口类或样式
-
 	return CView::PreCreateWindow(cs);
 }
 
@@ -74,3 +74,31 @@ CCSEDoc* CCSEView::GetDocument() const // 非调试版本是内联的
 
 
 // CCSEView 消息处理程序
+
+int CCSEView::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CView::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  在此添加您专用的创建代码
+	CSE_Model1_Maindlg.Create(IDD_CSE_MAIN,this);
+	CSE_Model2_Maindlg.Create(IDD_CSE_MAIN,this);
+	return 0;
+}
+
+void CCSEView::OnInitialUpdate()
+{
+	CView::OnInitialUpdate();
+
+	// TODO: 在此添加专用代码和/或调用基类
+	CSE_Model1_Maindlg.ShowWindow(TRUE);												//显示主对话框
+	CSE_Model2_Maindlg.ShowWindow(FALSE);
+
+	CRect maindlg_cr;
+	CSE_Model1_Maindlg.GetWindowRect(&maindlg_cr);										//获得主对话框大小
+	CSE_Model1_Maindlg.MoveWindow(0,0,maindlg_cr.Width(),maindlg_cr.Height(),TRUE);		//移动主对话框到视图左上角
+	CSE_Model2_Maindlg.MoveWindow(0,0,maindlg_cr.Width(),maindlg_cr.Height(),TRUE);
+	maindlg_cr.bottom += 70;
+	maindlg_cr.right += 10;
+	AfxGetMainWnd()->MoveWindow(&maindlg_cr,true);										//改变视图的大小以适应主对话框的大小
+}

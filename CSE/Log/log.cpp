@@ -10,6 +10,9 @@ static LARGE_INTEGER timestamp_freq;	//高精度计数器频率
 CNewListCtrl m_message_list;			//message_list全局变量
 CNewListCtrl m_reg_list;				//reg_list全局变量
 
+CNewListCtrl m_CSE_Message_List;		
+CNewListCtrl m_CSE_REG_List;			
+
 BEGIN_MESSAGE_MAP(CNewListCtrl,CListCtrl)
 	ON_NOTIFY_REFLECT(NM_CUSTOMDRAW,OnNMCustomdraw)
 END_MESSAGE_MAP()

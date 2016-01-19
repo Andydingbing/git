@@ -58,6 +58,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
+	cs.style &= ~WS_MAXIMIZEBOX;	//禁止最大化
+	cs.style &= ~WS_THICKFRAME;		//禁止改变窗口大小
 	if( !CFrameWnd::PreCreateWindow(cs) )
 		return FALSE;
 	// TODO: 在此处通过修改

@@ -42,7 +42,7 @@ int32_t ad9361_spi_writef(uint32_t Addr,uint32_t mask, uint32_t val)
 	uint32_t buf;
 	int32_t ret;
 	uint32_t offset;
-	offset = __ffs(mask);
+//	offset = __ffs(mask);
 
 	if(!mask)
 		return -EINVAL; //invalid argument
@@ -138,7 +138,7 @@ int32_t ad9361_spi_readf(uint32_t reg,uint32_t mask, uint32_t *buf)
 {
 	int32_t ret;
 	uint32_t offset;
-	offset = __ffs(mask);
+//	offset = __ffs(mask);
 
 	if (!mask)
 		return -EINVAL;

@@ -10,7 +10,7 @@
 #endif
 
 #define __cplusplus
-#ifdef (__cplusplus) || defined(__cplusplus__)
+#if defined (__cplusplus) || defined(__cplusplus__)
 extern "C" {
 #endif
 
@@ -19,6 +19,41 @@ class lib_CSE CSE
 public:
 	CSE();
 	virtual ~CSE();
+public:
+	enum SAMPLERATE
+	{
+		BW40,BW80,BW100,BW160
+	};
+	enum SOURCE
+	{
+		ARB,FPGA,CW
+	};
+	enum CONNECTOR
+	{
+		IO,OUTPUT,LOOP
+	};
+	enum RFU_CLOCKSOURCE
+	{
+		RFU_CLOCK_INTERNAL,
+		RFU_CLOCK_EXTERNAL,
+	};
+	enum RFU_TRIGGERSOURCE
+	{
+		RFU_TRIGGER_INTERNAL,
+		RFU_TRIGGER_EXTERNAL
+	};
+	enum TRIGGERMODE
+	{
+		IF,FREERUN,MARKER
+	};
+	enum PROCESS
+	{
+		IDLE_Driver,
+		WFTrigger_Driver,
+		Timeout_Driver,
+		RUNNING_Driver,
+		DONE_Driver
+	};
 	//启动函数列表
 public:
 	int32_t RF_Boot();
@@ -66,44 +101,9 @@ public:
 	//系统控制函数列表
 public:
 	int32_t RFU_WarningInfo(uint32_t RFIndex,uint32_t &State);
-public:
-	enum SAMPLERATE
-	{
-		BW40,BW80,BW100,BW160
-	};
-	enum SOURCE
-	{
-		ARB,FPGA,CW
-	};
-	enum CONNECTOR
-	{
-		IO,OUTPUT,LOOP
-	};
-	enum RFU_CLOCKSOURCE
-	{
-		RFU_CLOCK_INTERNAL,
-		RFU_CLOCK_EXTERNAL,
-	};
-	enum RFU_TRIGGERSOURCE
-	{
-		RFU_TRIGGER_INTERNAL,
-		RFU_TRIGGER_EXTERNAL
-	};
-	enum TRIGGERMODE
-	{
-		IF,FREERUN,MARKER
-	};
-	enum PROCESS
-	{
-		IDLE_Driver,
-		WFTrigger_Driver,
-		Timeout_Driver,
-		RUNNING_Driver,
-		DONE_Driver
-	};
 };
 
-#ifdef (__cplusplus) || defined(__cplusplus__)
+#if defined (__cplusplus) || defined(__cplusplus__)
 }
 #endif
 

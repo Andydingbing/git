@@ -1,6 +1,7 @@
 #ifndef _REG_DEFINE_H_
 #define _REG_DEFINE_H_
 
+#include "stdint.h"
 #include "visa_driver.h"
 #include "log.h"
 

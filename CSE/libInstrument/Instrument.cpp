@@ -148,9 +148,9 @@ bool CInstrument::Init() {
 // 		printf( "No Sensor found.\n" );
 // 		return 0;
 // 	}
-	CString no;
-	no.Format("找到%d个sensor",lNumSensors);
-	AfxMessageBox(no);
+// 	CString no;
+// 	no.Format("找到%d个sensor",lNumSensors);
+// 	AfxMessageBox(no);
 	for( long lSensor = 1; lSensor <= lNumSensors; lSensor++ )
 	{
 		long lStat = 0;
@@ -160,7 +160,7 @@ bool CInstrument::Init() {
 // 			Sleep (50);
 // 			rsnrpz_chan_isMeasurementComplete(m_hVisa, 1, &isMeasComplete);
 // 		} while ((isMeasComplete == VI_FALSE));
-		AfxMessageBox(szSensorName);
+//		AfxMessageBox(szSensorName);
 // 		lStat = rsnrpz_init( szSensorName, 1, 1, &hVisa );
 // 		do {
 // 			Sleep (50);

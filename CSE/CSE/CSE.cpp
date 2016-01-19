@@ -87,6 +87,7 @@ BOOL CCSEApp::InitInstance()
 		return FALSE;
 
 	// 唯一的一个窗口已初始化，因此显示它并对其进行更新
+	m_pMainWnd->SetWindowText(_T("CSE"));						//窗口title
 	m_pMainWnd->ShowWindow(SW_SHOW);
 	m_pMainWnd->UpdateWindow();
 	// 仅当具有后缀时才调用 DragAcceptFiles
