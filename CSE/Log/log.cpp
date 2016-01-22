@@ -7,11 +7,10 @@
 static LARGE_INTEGER timestamp_freq;	//高精度计数器频率
 
 #ifdef MFC
-CNewListCtrl m_message_list;			//message_list全局变量
-CNewListCtrl m_reg_list;				//reg_list全局变量
-
 CNewListCtrl m_CSE_Message_List;		
-CNewListCtrl m_CSE_REG_List;			
+CNewListCtrl m_CSE_REG_List;	
+#define m_message_list m_CSE_Message_List
+#define m_reg_list	   m_CSE_REG_List
 
 BEGIN_MESSAGE_MAP(CNewListCtrl,CListCtrl)
 	ON_NOTIFY_REFLECT(NM_CUSTOMDRAW,OnNMCustomdraw)

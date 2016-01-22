@@ -2,9 +2,9 @@
 
 #include "libCSE.h"
 
-CSE::CSE()
+CSE::CSE():RF_1(1),RF_2(2),RF_3(3),RF_4(4)
 {
-	
+
 }
 
 CSE::~CSE()

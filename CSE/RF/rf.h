@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 #include "visa_driver.h"
+#include "ArbReader.h"
 
 const uint32_t tx_dma_mem_size  = 1024 * 1024;		//每次传1M Sample = 4Mb
 
@@ -22,16 +23,19 @@ enum GPIO {
 class rf
 {
 public:
-	rf();
+	rf(int32_t RFIndex);
 	~rf(){};
-	static rf &Instance();
+public:
+	core k7_0_core;
+	core k7_1_core;
 public:
 	int32_t Get_FPGA_Version(uint32_t &ver);
 	const char *Get_Driver_Version();
+	int32_t Get_RF_Index(){return rf_index;}
 private:
 	static float arb_level_offset;
-	float att_table[101 * 117];										//Tx衰减值表
-	float off_table[101 * 117];										//Tx校准表
+	float att_table[101 * 117];					//Tx衰减值表
+	float off_table[101 * 117];					//Tx校准表
 public:
 	int32_t Fpga_Reset();						//FPGA复位
 	int32_t	Get_Tx_Rx_Board(TRX &trx);			//发射/接收板卡
@@ -44,12 +48,22 @@ public:
 	int32_t DMA_Start();						//DMA开始
 	int32_t Fpga_DMA_Read(uint32_t *pbuf,uint32_t length,float *time);
 
-	int32_t SetArb_Load(char * filepath);		
+	int32_t SetArb_Load(char * filepath);
+	int32_t SetArb_Segment(const ArbSeg_t &seg);
 	int32_t SetArb_Segments(uint16_t seg);
 	int32_t SetArb_Param(uint32_t addsamp,uint32_t cycl,uint32_t repmo);
 	int32_t SetArb_Trigger(bool reTrigger, bool autoStart, uint32_t src, uint32_t trigDelay);
+	int32_t SetArb_ManualTrigger();
 	int32_t SetArb_MultiSegMode(uint32_t msts, uint32_t msrm);
+	int32_t SetArb_MultiSegNext(uint32_t nextSeg);
+	int32_t GetArb_CurrentSeg();
 	int32_t SetArb_FreqOffset(uint32_t freqMHz);
+
+	int32_t m_unperiodMarkerCounter;
+	int32_t SetArb_UnperiodMarkerStart();
+	int32_t SetArb_UnperiodAddMarker(int no,uint32_t start,uint32_t keep);
+	int32_t SetArb_UnperiodMarkerEnd(int no,int seg);
+
 	int32_t Arb(char *   FILEPATH,									//文件路径
 				unsigned Additional_Samples=0,						//Additional Samples = 0
 				unsigned Cycles=1,									//Cycles = 1
@@ -96,8 +110,8 @@ private:
 		IQCapsrcETrig4	= 0x15,
 		IQCapsrcIFPwr	= 0x21
 	};
-	int32_t Rx_CAP_Memory_Alloc();									//申请Rx DMA内存
-	int32_t Rx_CAP_Memory_Release();								//释放Rx DMA内存
+	int32_t Rx_CAP_Memory_Alloc();										//申请Rx DMA内存
+	int32_t Rx_CAP_Memory_Release();									//释放Rx DMA内存
 	int32_t Rx_Capture(int16_t *			I,							//I路值
 					   int16_t *			Q,							//Q路值
 					   double		 Threshold_dBm	 = 0,				//阈值	
@@ -149,16 +163,18 @@ private:
 		RepMode_Single_Slot,
 		RepMode_Continous
 	};
-	enum MultiSegTrigSrc {											//DMA多段触发源(暂不支持多段播放)
+	enum MultiSegTrigSrc {											//DMA多段触发源
 		MultiSegTrigSrc_Manual
 	};
-	enum MultiSegRepMode {											//DMA多段播放方式(暂不支持多段播放)
+	enum MultiSegRepMode {											//DMA多段播放方式
 		MultiSegRepMode_Auto,
 		MultiSegRepMode_Continous,
 		MultiSegRepMode_Continous_Seamless
 	};
 private:
 	unsigned long aSamples[R_BlockSamples];							//IQ数据临时存放
+private:
+	uint32_t rf_index;
 public:
 	static char *get_last_error();
 private:

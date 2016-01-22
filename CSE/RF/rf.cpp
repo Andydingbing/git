@@ -1,8 +1,7 @@
 #include "StdAfx.h"
 
-#include "RegisterDefine.h"
+#include "RegisterDefine_CSE.h"
 #include "ad9361_spi.h"
-#include "ArbReader.h"
 #include "rf.h"
 #include "log.h"
 #include "math.h"
@@ -31,22 +30,17 @@ float rf::arb_level_offset = 0;
 int rf::ad9361_gain[20] = {20,25,30,35,40,45,50,55,60,5,10,15,20,25,30,35,40,45,50,55};
 int rf::Total_gain[20] = {-14,-9,-4,1,-4,1,6,11,16,15,20,25,30,35,40,45,50,55,60,65};
 
-rf::rf()
+rf::rf(int32_t RFIndex)
 {
+	rf_index = RFIndex;
 	tx_memory_status = false;
 	rx_memory_status = false;
-}
-
-rf &rf::Instance()
-{
-	static rf Rf;
-	return Rf;
 }
 
 int32_t rf::Get_FPGA_Version(uint32_t &ver)
 {
 	REG_DECLARE(0x0000);	//ver = d7---d15
-	ad9361_k7r(0x0000);
+	CSE_k7_r(0x0000);
 //	ver = REG(0x0000).ver;
 	ver = r0x0000.u32;
 	return 0;
@@ -61,7 +55,7 @@ const char *rf::Get_Driver_Version()
 int32_t rf::Fpga_Reset()
 {
 	REG_DECLARE(0x0000);	//d0 OP
-	OP(0x0000);
+	CSE_k7_OP(0x0000);
 	return 0;
 }
 
@@ -95,7 +89,7 @@ int32_t rf::Turn_TxCh_On()
 	REG(0x0028).Flash_CS = 1;
 	REG(0x0028).Flash_wp = 0;
 	REG(0x0028).Tx_Power_Off = 1;
-	ad9361_k7w(0x0028);
+	CSE_k7_w(0x0028);
 	return 0;
 }
 
@@ -116,7 +110,7 @@ int32_t rf::Tx_DMA_Memory_Alloc()
 // 		return E_Tx_Mem_Data_Write;
 // 	}
 	REG(0x0007).adr = (((uint64_t)tx_dma_memory.m_phy_addr & 0x00000003ffffffff) >> 4);
-	ad9361_k7w(0x0007);
+	CSE_k7_w(0x0007);
 	tx_memory_status = true;
 	return 0;
 }
@@ -136,7 +130,7 @@ int32_t rf::Tx_DMA_Memory_Release()
 int32_t rf::DMA_Start()
 {
 	REG_DECLARE(0x0001);
-	ad9361_k7OP(0x0001, fpga_rd_op);	//d0 OP
+	k7_OP(0x0001, fpga_rd_op);	//d0 OP
 	return 0;
 }
 
@@ -161,10 +155,10 @@ int32_t rf::Fpga_DMA_Read(uint32_t *pbuf,uint32_t length,float *time)
 	}
 
 	REG(0x0008).tlp_size = 16;
-	ad9361_k7w(0x0008);
+	CSE_k7_w(0x0008);
 
 	REG(0x0009).tlp_count = length / 16;
-	ad9361_k7w(0x0009);
+	CSE_k7_w(0x0009);
 
 // 	REG(0x0007).adr = (((uint64_t)tx_dma_memory.m_phy_addr & 0x00000003ffffffff) >> 4);
 // 	ad9361_k7w(0x0007);
@@ -187,7 +181,7 @@ int32_t rf::Fpga_DMA_Read(uint32_t *pbuf,uint32_t length,float *time)
 	unsigned int dmacount[5] = {0};
 	while(1) {											//Make Sure DMA Complete
 		for (int i=0; i<5; i++) {
-			ad9361_k7r(0x0021);
+			CSE_k7_r(0x0021);
 			dmacount[i] = REG(0x0021).dma_rd_counter;
 			Log.stdprintf("REG(0x0021) = %d\n",dmacount[i]);
 			if (dmacount[i] == length) {
@@ -207,7 +201,7 @@ int32_t rf::Fpga_DMA_Read(uint32_t *pbuf,uint32_t length,float *time)
 	DMA_CTime = (float)(DMA_ETime - DMA_STime)/1000;	//计算DMA时间
 	time = &DMA_CTime;
 
-	ad9361_k7r(0x0020);									//fpga计算的DMA时间
+	CSE_k7_r(0x0020);									//fpga计算的DMA时间
 	Log.stdprintf("Timer = %lu\n", REG(0x0020).dma_rd_timer);
 	return 0;
 }
@@ -222,51 +216,239 @@ int32_t rf::SetArb_Load(char * filepath)
 	return 0;
 }
 
+int32_t rf::SetArb_Segment(const ArbSeg_t &seg)
+{
+	REG_DECLARE(0x0303);
+	REG_DECLARE(0x0304);
+
+	union as_reg_t as_reg[16] = { 0 };
+
+	AS_REG(0).sample     = seg.samples;
+	AS_REG(1).seg_adr    = seg.seg_adr;
+	AS_REG(2).inter_fltr = seg.inter_fltr;
+
+	AS_REG(3).mkr1_start = seg.markers[0].marker.period.start;
+	AS_REG(4).mkr1_keep  = seg.markers[0].marker.period.keep;
+	AS_REG(5).mkr1_period= seg.markers[0].marker.period.period;
+
+	AS_REG(6).mkr2_start = seg.markers[1].marker.period.start;
+	AS_REG(7).mkr2_keep  = seg.markers[1].marker.period.keep;
+	AS_REG(8).mkr2_period= seg.markers[1].marker.period.period;
+
+	AS_REG(9).mkr3_start   = seg.markers[2].marker.period.start;
+	AS_REG(10).mkr3_keep   = seg.markers[2].marker.period.keep;
+	AS_REG(11).mkr3_period = seg.markers[2].marker.period.period;
+
+	AS_REG(12).mkr4_start  = seg.markers[3].marker.period.start;
+	AS_REG(13).mkr4_keep   = seg.markers[3].marker.period.keep;
+	AS_REG(14).mkr4_period = seg.markers[3].marker.period.period;
+
+	AS_REG(16).sr = seg.sr;
+
+	AS_REG(17).mkr1_type   = seg.markers[0].type;
+	AS_REG(17).mkr2_type   = seg.markers[1].type;
+	AS_REG(17).mkr3_type   = seg.markers[2].type;
+	AS_REG(17).mkr4_type   = seg.markers[3].type;
+
+	for (int i = 0;i < 18;i ++) {
+		REG(0x0303).adr = i;
+		REG(0x0303).seg = seg.seg_num;
+
+		REG(0x0304).data = as_reg[i].data;
+		CSE_k7_w(0x0304);
+		CSE_k7_OP(0x0303);
+	}
+	return 0;
+}
+
 int32_t rf::SetArb_Segments(uint16_t seg)
 {
-	REG_DECLARE(0x1005);
-	REG(0x1005).seg = seg;
-	ad9361_k7w(0x1005);
+	REG_DECLARE(0x0305);
+	REG(0x0305).seg = seg;
+	CSE_k7_w(0x0305);
 	return 0;
 }
 
 int32_t rf::SetArb_Param(uint32_t addsamp,uint32_t cycl,uint32_t repmo)
 {
-	REG_DECLARE(0x1002);
-	REG(0x1002).addition    = addsamp;			//Additional Samples = 0
-	REG(0x1002).cycles      = cycl;				//Cycles =1
-	REG(0x1002).repetition  = repmo;			//播放方式:Continuous
-	ad9361_k7w(0x1002);
+	REG_DECLARE(0x0302);
+	REG(0x0302).addition    = addsamp;			//Additional Samples = 0
+	REG(0x0302).cycles      = cycl;				//Cycles =1
+	REG(0x0302).repetition  = repmo;			//播放方式:Continuous
+	CSE_k7_w(0x0302);
 	return 0;
 }
 
 int32_t rf::SetArb_Trigger(bool reTrigger, bool autoStart, uint32_t src, uint32_t trigDelay)
 {
-	REG_DECLARE(0x100a);
-	REG(0x100a).retrig      = reTrigger;		//ReTrigger = 0 
-	REG(0x100a).delay       = trigDelay;		//Trigger Delay = 0
-	REG(0x100a).autostart   = autoStart;		//AutoStart = 1
-	REG(0x100a).src         = src;				//触发源：Manual
-	ad9361_k7w(0x100a);
+	REG_DECLARE(0x030a);
+	REG(0x030a).retrig      = reTrigger;		//ReTrigger = 0 
+	REG(0x030a).delay       = trigDelay;		//Trigger Delay = 0
+	REG(0x030a).autostart   = autoStart;		//AutoStart = 1
+	REG(0x030a).src         = src;				//触发源：Manual
+	CSE_k7_w(0x030a);
+	return 0;
+}
+
+int32_t rf::SetArb_ManualTrigger()
+{
+	REG_DECLARE(0x030b);
+	CSE_k7_OP(0x030b);
 	return 0;
 }
 
 int32_t rf::SetArb_MultiSegMode(uint32_t msts, uint32_t msrm)
 {
-	REG_DECLARE(0x100c);
-	REG(0x100c).ms_trig     = msts;				//多段Trigger：Manual
-	REG(0x100c).ms_rm       = msrm;				//多段重复方式：Auto
-	ad9361_k7w(0x100c);
+	REG_DECLARE(0x030c);
+	REG(0x030c).ms_trig     = msts;				//多段Trigger：Manual
+	REG(0x030c).ms_rm       = msrm;				//多段重复方式：Auto
+	CSE_k7_w(0x030c);
 	return 0;
+}
+
+int32_t rf::SetArb_MultiSegNext(uint32_t nextSeg)
+{
+	REG_DECLARE(0x030d);
+	REG(0x030d).next_seg = nextSeg;
+	CSE_k7_OP(0x030d);
+	return 0;
+}
+
+int32_t rf::GetArb_CurrentSeg()
+{
+	REG_DECLARE(0x030e);
+	CSE_k7_r(0x030e);
+	return REG(0x030e).seg;
 }
 
 int32_t rf::SetArb_FreqOffset(uint32_t freqMHz)
 {
-	REG_DECLARE(0x1010);
-	REG_DECLARE(0x1011);
-	REG(0x1011).offset      = freqMHz;			//频偏 = 0	
-	ad9361_k7w(0x1011);
-	OP(0x1010);
+	REG_DECLARE(0x0310);
+	REG_DECLARE(0x0311);
+	REG(0x0311).offset      = freqMHz;			//频偏 = 0	
+	CSE_k7_w(0x0311);
+	CSE_k7_OP(0x0310);
+	return 0;
+}
+
+int32_t rf::SetArb_UnperiodMarkerStart()
+{
+	static const int MARKER_DATA_OFFSET = 64;
+	m_unperiodMarkerCounter = MARKER_DATA_OFFSET;
+	return 0;
+}
+
+int32_t rf::SetArb_UnperiodAddMarker(int no,uint32_t start,uint32_t keep)
+{
+	switch (no) {
+		case 1: {
+			REG_DECLARE(0x0333);
+			REG_DECLARE(0x0334);
+
+			REG(0x0334).data = start;
+			CSE_k7_w(0x0334);
+			REG(0x0333).adr = m_unperiodMarkerCounter;
+			CSE_k7_OP(0x0333);
+
+			REG(0x0334).data = keep;
+			CSE_k7_w(0x0334);
+			REG(0x0333).adr = m_unperiodMarkerCounter + 1;
+			CSE_k7_OP(0x0333);
+			break;
+				}
+		case 2: {
+			REG_DECLARE(0x0335);
+			REG_DECLARE(0x0336);
+
+			REG(0x0336).data = start;
+			CSE_k7_w(0x0336);
+			REG(0x0335).adr = m_unperiodMarkerCounter;
+			CSE_k7_OP(0x0335);
+
+			REG(0x0336).data = keep;
+			CSE_k7_w(0x0336);
+			REG(0x0335).adr = m_unperiodMarkerCounter + 1;
+			CSE_k7_OP(0x0335);
+			break;
+				}
+		case 3: {
+			REG_DECLARE(0x0337);
+			REG_DECLARE(0x0338);
+
+			REG(0x0338).data = start;
+			CSE_k7_w(0x0338);
+			REG(0x0337).adr = m_unperiodMarkerCounter;
+			CSE_k7_OP(0x0337);
+
+			REG(0x0338).data = keep;
+			CSE_k7_w(0x0338);
+			REG(0x0337).adr = m_unperiodMarkerCounter + 1;
+			CSE_k7_OP(0x0337);
+			break;
+				}
+		case 4: {
+			REG_DECLARE(0x0339);
+			REG_DECLARE(0x033a);
+
+			REG(0x033a).data = start;
+			CSE_k7_w(0x033a);
+			REG(0x0339).adr = m_unperiodMarkerCounter;
+			CSE_k7_OP(0x0339);
+
+			REG(0x033a).data = keep;
+			CSE_k7_w(0x033a);
+			REG(0x0339).adr = m_unperiodMarkerCounter + 1;
+			CSE_k7_OP(0x0339);
+			break;
+				}
+	}
+	m_unperiodMarkerCounter += 2;								//地址随时间递增
+	return 0;
+}
+
+int32_t rf::SetArb_UnperiodMarkerEnd(int no,int seg)
+{
+	switch (no) {
+		case 1: {
+			REG_DECLARE(0x0333);
+			REG_DECLARE(0x0334);
+
+			REG(0x0334).data = m_unperiodMarkerCounter;
+			CSE_k7_w(0x0334);
+			REG(0x0333).adr = seg;
+			CSE_k7_OP(0x0333);
+			break;
+				}
+		case 2: {
+			REG_DECLARE(0x0335);
+			REG_DECLARE(0x0336);
+
+			REG(0x0336).data = m_unperiodMarkerCounter;
+			CSE_k7_w(0x0336);
+			REG(0x0335).adr = seg;
+			CSE_k7_OP(0x0335);
+				}
+		case 3: {
+			REG_DECLARE(0x0337);
+			REG_DECLARE(0x0338);
+
+			REG(0x0338).data = m_unperiodMarkerCounter;
+			CSE_k7_w(0x0338);
+			REG(0x0337).adr = seg;
+			CSE_k7_OP(0x0337);
+			break;
+				}
+		case 4: {
+			REG_DECLARE(0x0339);
+			REG_DECLARE(0x033a);
+
+			REG(0x033a).data = m_unperiodMarkerCounter;
+			CSE_k7_w(0x033a);
+			REG(0x0339).adr = seg;
+			CSE_k7_OP(0x0339);
+			break;
+				}
+	}
 	return 0;
 }
 
@@ -295,12 +477,11 @@ int32_t rf::Arb(char* FILEPATH,
 
 	ArbReader arb;
 
-	REG_DECLARE(0x1003);
-	REG_DECLARE(0x1004);
-	REG_DECLARE(0x1006);
-	REG_DECLARE(0x1007);
+	REG_DECLARE(0x0303);
+	REG_DECLARE(0x0304);
+	REG_DECLARE(0x0306);
+	REG_DECLARE(0x0307);
 
-//	Status_Check(OpenBoard(slot,false));
 	Status_Check(set_last_error((Get_Tx_Memory_Status() == false),"Arb Error! %s",get_last_error()));
 	Status_Check(set_last_error(Arb_FPGA_CW(0),"Arb FPGA CW Error!"));
 	Status_Check(set_last_error(Arb_Stop(),"Arb Stop Error!"));
@@ -316,6 +497,7 @@ int32_t rf::Arb(char* FILEPATH,
 		return -ENOMEM;
 											
 	//DMA
+	union as_reg_t as_reg[16] = { 0 };
 	const ArbReader::SegHeader_t *seg_info;
 	for (int i = 0; i < arb.GetSegments() ;i++)
 	{
@@ -331,17 +513,16 @@ int32_t rf::Arb(char* FILEPATH,
 /*		double     sr		 = 245.76e6;
 		uint32_t   interFltr = sr / seg_info->SampleRate;*/
 
-		union as_reg_t as_reg[18] = { 0 };
 		AS_REG(0).sample		= seg_info->Samples;
 		AS_REG(1).seg_adr		= 0;
 		AS_REG(2).inter_fltr	= interFltr;
 		AS_REG(16).sr			= sr;
 		for (int j = 0;j < 18;j++) {
-			REG(0x1003).adr	    = j;
-			REG(0x1003).seg	    = i;
-			REG(0x1004).data    = as_reg[j].data;
-			ad9361_k7w(0x1004);
-			OP(0x1003);
+			REG(0x0303).adr	    = j;
+			REG(0x0303).seg	    = i;
+			REG(0x0304).data    = as_reg[j].data;
+			CSE_k7_w(0x0304);
+			CSE_k7_OP(0x0303);
 		}
 	}
 	sample_left = totalsample;
@@ -358,10 +539,10 @@ int32_t rf::Arb(char* FILEPATH,
 			samples = sample_left;
 
 		DDRAdr				= sample_tr >> 1;
-		REG(0x1006).samples = samples;
-		ad9361_k7w(0x1006);
-		REG(0x1007).adr     = DDRAdr;
-		ad9361_k7w(0x1007);
+		REG(0x0306).samples = samples;
+		CSE_k7_w(0x0306);
+		REG(0x0307).adr     = DDRAdr;
+		CSE_k7_w(0x0307);
 
  		Log.stdprintf("\n");
  		Log.stdprintf("DMA %d Ready: samples: %d\n",DMA_count,samples);
@@ -392,32 +573,30 @@ int32_t rf::Arb_FPGA_CW(bool fpga_cw,double freq)
 //	Status_Check(OpenBoard(slot,false));
 //	AD9361.get_rx_sampling_freq(&samprate);
 	REG(0x00e3).fpga_cw_freqMHz = (int32_t)(freq * 4294967296.0 / samprate); 
-	ad9361_k7w(0x00e3);
+	CSE_k7_w(0x00e3);
 	REG(0x00e2).fpga_cw = fpga_cw;
-	ad9361_k7w(0x00e2);
+	CSE_k7_w(0x00e2);
 	return 0;
 }
 
 int32_t rf::Arb_Start()
 {
-	REG_DECLARE(0x1009);
+	REG_DECLARE(0x0309);
 
-//	Status_Check(OpenBoard(slot,false));
-	REG(0x1009).abort		= 0;
-	REG(0x1009).en			= 1;
-	REG(0x1009).apc			= 0;
-	ad9361_k7w(0x1009);
+	REG(0x0309).abort		= 0;
+	REG(0x0309).en			= 1;
+	REG(0x0309).apc			= 0;
+	CSE_k7_w(0x0309);
 	return 0;
 }
 
 int32_t rf::Arb_Stop()
 {
-	REG_DECLARE(0x1009);
+	REG_DECLARE(0x0309);
 
-//	Status_Check(OpenBoard(slot,false));
-	REG(0x1009).abort		= 1;
-	REG(0x1009).en			= 0;
-	ad9361_k7w(0x1009);
+	REG(0x0309).abort		= 1;
+	REG(0x0309).en			= 0;
+	CSE_k7_w(0x0309);
 	return 0;
 }
 
@@ -451,22 +630,20 @@ int32_t rf::Set_Tx_Baseband_Att(double att)
 {
 	REG_DECLARE(0x002d);
 	REG(0x002d).baseband_att = att * 500.0;
-	ad9361_k7w(0x002d);
+	CSE_k7_w(0x002d);
 	return 0;
 }
 
 int32_t rf::Get_Tx_Baseband_Att(double &att)
 {
 	REG_DECLARE(0x002d);
-	ad9361_k7r(0x002d);
+	CSE_k7_r(0x002d);
 	att = (double)(REG(0x002d).baseband_att) / 500.0;
 	return 0;
 }
 
 bool rf::Get_Tx_Memory_Status()
 {
-	if (!tx_memory_status)
-		set_last_error("RF:Tx Memory Not Alloc");
 	return tx_memory_status;
 }
 
@@ -584,11 +761,11 @@ int32_t rf::Rx_CAP_Memory_Alloc()
 			addr_to_FPGA[j] = (uint64_t)rx_cap_memory[i].m_phy_addr + 128 * 1024 * 4 * j;
 			addr_to_FPGA[j] = ((addr_to_FPGA[j] & 0x00000003ffffffff) >> 2);
 			REG(0x0017).adr = (uint32_t)addr_to_FPGA[j];
-			ad9361_k7w(0x0017);
+			CSE_k7_w(0x0017);
 			REG(0x0016).data= 0;
-			ad9361_k7w(0x0016);
+			CSE_k7_w(0x0016);
 			REG(0x0016).data=0x80000000 | (i*8+j);
-			ad9361_k7w(0x0016);
+			CSE_k7_w(0x0016);
 		}
 	}
 	rx_memory_status = true;
@@ -644,24 +821,24 @@ int32_t rf::Rx_Capture(int16_t *			I,
 	//Register Configure
 	REG(0x1062).iqcap_src_sel		= Trig_Src;					//触发源
 	REG(0x1062).iqcap_src_edge		= B_Posedge;				//上升沿/下降沿
-	ad9361_k7w(0x1062);
+	CSE_k7_w(0x1062);
 	REG(0x1060).iqcap_trig_offset	= Trig_Offset;				//Trigger Offset
-	ad9361_k7w(0x1060);
+	CSE_k7_w(0x1060);
 	if (Cap_Offset % 16 !=0){
 		set_last_error("capOffset Wrong!");
 		Log.stdprintf("capOffset Wrong!\n");
 		return -1;									//Cap Offset error
 	}
 	REG(0x1061).iqcap_cap_offset	= Cap_Offset;				//Cap Offset
-	ad9361_k7w(0x1061);
+	CSE_k7_w(0x1061);
 	REG(0x1066).samples				= samples;					//采样点数
-	ad9361_k7w(0x1066);
+	CSE_k7_w(0x1066);
 	REG(0x1063).iqcap_timeout		= Trig_Timeout * 62.5 + 0.5;//超时点数
-	ad9361_k7w(0x1063);
+	CSE_k7_w(0x1063);
 	REG(0x1067).gap					= Trig_Gap *62.5 + 0.5;		
-	ad9361_k7w(0x1067);
+	CSE_k7_w(0x1067);
 	REG(0x1068).threshold			= (unsigned int)(pow(10.0,(Threshold_dBm / 10.0)) * 1000000);	
-	ad9361_k7w(0x1068);
+	CSE_k7_w(0x1068);
 
 	Status_Check(set_last_error(IQ_Capture_Start(),"Rx Cap Start Error! %s",get_last_error()));
 
@@ -689,7 +866,7 @@ int32_t rf::Rx_Capture(int16_t *			I,
 			timeoutflag = 1;									//超时
 		Log.stdprintf("timeoutflag = %d\n",timeoutflag);
 		for (int i=0;i<5;i++) {									//连续读0x0014,上行捕获的Sample数
-			ad9361_k7r(0x0014);
+			CSE_k7_r(0x0014);
 			Log.stdprintf("REG(0x0014):%d\n",REG(0x0014).samples);
 			capturedsamples[i] = REG(0x0014).samples;
 		}
@@ -731,10 +908,10 @@ int32_t rf::IQ_Capture_Start()
   //RxFs							= 122.88 / REG(0x1069).rx_dec_num;
 	RxFs							= 122.88 / 1;
 	REG(0x106f).cap_tlp_count		= ((RxFs * 1e3) /32)/2;
-	ad9361_k7w(0x106f);
+	CSE_k7_w(0x106f);
 	REG(0x1065).abort				= 0;
-	ad9361_k7w(0x1065);
-	OP(0x1064);	
+	CSE_k7_w(0x1065);
+	CSE_k7_OP(0x1064);	
 	return 0;
 }
 
@@ -742,7 +919,7 @@ int32_t rf::IQ_Capture_Abort()
 {
 	REG_DECLARE(0x1065);
 	REG(0x1065).abort = 1;
-	ad9361_k7w(0x1065);
+	CSE_k7_w(0x1065);
 	return 0;
 }
 
@@ -836,9 +1013,9 @@ int32_t rf::Rx_Level_Select(uint32_t level)
 // 	ad9361_k7w(0x0025);
 // 	return 0;
 	REG_DECLARE(0x00e4);
-	ad9361_k7r(0x00e4);
+	CSE_k7_r(0x00e4);
 	REG(0x00e4).level_select = level;
-	ad9361_k7w(0x00e4);
+	CSE_k7_w(0x00e4);
 	return 0;
 }
 
@@ -851,10 +1028,10 @@ int32_t rf::Set_Rx_Rf_Att(uint32_t att)
 // 	ad9361_k7w(0x0025);
 // 	return 0;
 	REG_DECLARE(0x00e4);
-	ad9361_k7r(0x00e4);
+	CSE_k7_r(0x00e4);
 	REG(0x00e4).rx_43503_16 = (att/16)?1:0;
 	REG(0x00e4).rx_43503_8  = ((att/8)%2)?1:0;
-	ad9361_k7w(0x00e4);
+	CSE_k7_w(0x00e4);
 	return 0;
 }
 
@@ -862,17 +1039,17 @@ int32_t rf::Get_Rx_Power(double &pow,int &iq)
 {
 	REG_DECLARE(0x002b);
 	REG_DECLARE(0x002c);
-	ad9361_k7r(0x002c);
+	CSE_k7_r(0x002c);
 	int get_rx_p_count = 0;
 	while (REG(0x002c).rx_data_power_en == 0) {
-		ad9361_k7r(0x002c);
+		CSE_k7_r(0x002c);
 		get_rx_p_count ++;
 		if (get_rx_p_count > 100) {
 			set_last_error("RF:Get Rx Power Overtime!");
 			return -1;
 		}
 	}
-	ad9361_k7r(0x002b);
+	CSE_k7_r(0x002b);
 
 	iq = REG(0x002b).ddc_rd;
 	pow = 10 * log10((REG(0x002b).ddc_rd) / 1000000.0);	//ADC基准值定为1000000
@@ -885,8 +1062,8 @@ int32_t rf::Set_Rx_Rf_Lo(uint32_t LoFreq)
 	REG_DECLARE(0x0036);
 	LoFreq = LoFreq / 1000000;
 	REG(0x0036).lo_freq = LoFreq;
-	ad9361_k7w(0x0036);
-	OP(0x0035);
+	CSE_k7_w(0x0036);
+	CSE_k7_OP(0x0035);
 	return 0;
 }
 
@@ -900,8 +1077,8 @@ int32_t rf::Setup_DDC()
 	REG_DECLARE(0x002a);
 	REG_DECLARE(0x0029);
 	REG(0x002a).ddc = 10.0 * 4294967296 / 122.88;		//中频10MHz * 2^32 / 122.88
-	ad9361_k7w(0x002a);
-	OP(0x0029);
+	CSE_k7_w(0x002a);
+	CSE_k7_OP(0x0029);
 	return 0;
 }
 
@@ -909,7 +1086,7 @@ int32_t rf::Set_Rx_Freq(uint64_t freq)
 {
 
 	REG_DECLARE(0x00e4);
-	ad9361_k7r(0x00e4);
+	CSE_k7_r(0x00e4);
 	int Rx_Select[5] = {0,3,2,1,7};
 	int rs;
 	uint64_t ext_lo,ad9361_lo;
@@ -930,7 +1107,7 @@ int32_t rf::Set_Rx_Freq(uint64_t freq)
 		}
 	}
 	REG(0x00e4).rx_select = rs;
-	ad9361_k7w(0x00e4);
+	CSE_k7_w(0x00e4);
 	return 0;
 }
 

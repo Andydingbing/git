@@ -1,5 +1,5 @@
-#ifndef _REG_DEFINE_H_
-#define _REG_DEFINE_H_
+#ifndef _REG_DEFINE_AD9361_H_
+#define _REG_DEFINE_AD9361_H_
 
 #include "stdint.h"
 #include "visa_driver.h"

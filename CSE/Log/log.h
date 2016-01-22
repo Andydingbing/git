@@ -34,8 +34,8 @@
 
 //log 开关
 //const int log_flag = console_log|message_log|message_log_f|k7reg_log|k7reg_log_f;
-const int log_flag = message_log|k7reg_log|console_log;
-//const int log_flag = all_log;
+//const int log_flag = message_log | message_log_f | k7reg_log;
+const int log_flag = all_log;
 //const int log_flag = console_log;
 
 #ifdef MFC
@@ -73,6 +73,7 @@ public:
 private:
 	virtual double get_timestamp();
 private:
+
 	static int message_list_count;			//message_list计数
 	static int reg_list_count;				//reg_list计数
 	char newpropicture[100];

@@ -2,6 +2,7 @@
 #define _LIBCSE_H_
 
 #include "stdint.h"
+#include "rf.h"
 
 //#define lib_CES
 #ifdef lib_CSE
@@ -19,6 +20,11 @@ class lib_CSE CSE
 public:
 	CSE();
 	virtual ~CSE();
+public:
+	rf RF_1;
+	rf RF_2;
+	rf RF_3;
+	rf RF_4;
 public:
 	enum SAMPLERATE
 	{

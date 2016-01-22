@@ -7,6 +7,8 @@
 #include "CSEDoc.h"
 #include "CSEView.h"
 
+#include "log.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
